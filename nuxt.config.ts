@@ -12,6 +12,9 @@ export default defineNuxtConfig({
   components: {
     dirs: ["~/components", "~/components/ui"],
   },
+  devServer: {
+    port: 8000,
+  },
   // TODO potentially add also:
   //  @pinia/nuxt + pinia persisted state?
   //  @vueuse/nuxt
@@ -25,7 +28,8 @@ export default defineNuxtConfig({
   modules: [
     "@nuxt/eslint",
     "@nuxt/image",
-    "@wagmi/vue/nuxt",
+    // TODO change back to @wagmi/vue/nuxt once they start supporting Nuxt 4
+    "@microhoffman/vue/nuxt",
     "nuxt-typed-router",
     "shadcn-nuxt",
   ],

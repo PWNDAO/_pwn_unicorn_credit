@@ -121,6 +121,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-[url('/images/pwn_grid_background_minified.png')] bg-cover bg-center bg-no-repeat overflow-x-hidden max-w-dvw min-h-dvh text-foreground;
+    @apply text-foreground;
+    /* @apply bg-[url('/images/unicorn_page_background.svg')] bg-cover bg-center bg-no-repeat overflow-x-hidden max-w-dvw min-h-dvh text-foreground; */
   }
 }

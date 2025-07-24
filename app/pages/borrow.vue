@@ -1,3 +1,5 @@
 <template>
-  <div>Borrow page</div>
+  <div class="mx-auto">
+    <BorrowForm />
+  </div>
 </template>

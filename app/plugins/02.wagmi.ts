@@ -1,5 +1,6 @@
 // plugins/2.wagmi.ts
-import { WagmiPlugin } from "@wagmi/vue";
+// TODO change back to @wagmi/vue once they start supporting Nuxt 4
+import { WagmiPlugin } from "@microhoffman/vue";
 import { defineNuxtPlugin } from "nuxt/app";
 import { wagmiAdapter } from "~/config/appkit";
 
