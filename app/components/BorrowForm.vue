@@ -1,62 +1,82 @@
 <template>
     <div class="bg-neutral-900 p-6 rounded-lg max-w-2xl mx-auto">
-        <form @submit="onSubmit">
+        <form class="flex flex-col gap-y-4" @submit="onSubmit">
 
             <div class="border-2 p-3 rounded-lg border-neutral-700">
-                <label>I want to lend</label>
+                <label class="text-neutral-400">I want to lend</label>
                 <div class="flex justify-between">
                     <FormField v-slot="{ componentField }" name="amount">
                         <FormItem>
                             <FormControl>
-                                <Input placeholder="23" v-bind="componentField" />
+                                <Input :class="inputsCssClasses" placeholder="0" v-bind="componentField" />
                             </FormControl>
 
                             <FormDescription>
-                                $23.05
+                                {{ creditPrice }}
                             </FormDescription>
 
-                            <FormMessage />
+                            <FormMessage v-if="hasAttemptedSubmit" />
                         </FormItem>
                     </FormField>
 
                     <FormField name="token">
                         <FormItem>
                             <FormControl>
-                                <SelectTokenModal @select="handleTokenSelect" />
+                                <SelectTokenModal field-name="token" />
                             </FormControl>
 
-                            <FormMessage />
+                            <FormMessage v-if="hasAttemptedSubmit" />
                         </FormItem>
                     </FormField>
                 </div>
             </div>
-            
-            <FormField v-slot="{ componentField }" name="interest">
-                <FormItem>
-                    <FormLabel>I want to earn (%)</FormLabel>
+
+            <FormField v-slot="{ componentField }" name="collateral">
+                <FormItem class="border-2 p-3 rounded-lg border-neutral-700">
+                    <FormLabel class="text-neutral-400">Collateral required to accept</FormLabel>
 
                     <FormControl>
-                        <Input placeholder="6" v-bind="componentField" />
+                        <div class="flex gap-x-2">
+                            <div v-if="!creditTokenValue">---</div>
+                            <div v-else>{{ creditTokenValue.symbol }}</div>
+                            <span>/</span>
+                            <div v-if="!creditTokenValue">---</div>
+                            <SelectTokenModal v-else field-name="collateral" />
+                        </div>
                     </FormControl>
 
-                    <FormMessage />
+                    <FormMessage v-if="hasAttemptedSubmit" />
+                </FormItem>
+            </FormField>
+            
+            <FormField v-slot="{ componentField }" name="interest">
+                <FormItem class="border-2 p-3 rounded-lg border-neutral-700">
+                    <FormLabel class="text-neutral-400">I want to earn (%)</FormLabel>
+
+                    <FormControl>
+                        <Input :class="inputsCssClasses" placeholder="0" v-bind="componentField" />
+                    </FormControl>
+
+                    <FormMessage v-if="hasAttemptedSubmit" />
                 </FormItem>
             </FormField>
 
-            <div>
-                <div class="flex justify-between mt-4">
-                    <span>Lending to Collateral Ratio</span>
+            <div class="border-2 p-3 rounded-lg border-neutral-700 flex flex-col gap-y-2">
+                <div class="flex justify-between">
+                    <span class="text-neutral-400">Lending to Collateral Ratio</span>
                     <span>65%</span>
                 </div>
-                <div class="flex justify-between mt-4">
-                    <span>Loan Duration</span>
+                <div class="flex justify-between">
+                    <span class="text-neutral-400">Loan Duration</span>
                     <span>30 days</span>
                 </div>
-                <div class="flex justify-between mt-4">
-                    <span>Estimated Gas Fee</span>
+                <div class="flex justify-between">
+                    <span class="text-neutral-400">Estimated Gas Fee</span>
                     <span>~ $0.05</span>
                 </div>
             </div>
+
+            <pre>{{ values }}</pre>
 
             <Button type="submit" class="mt-4">
                 {{ submitButtonText }}
@@ -66,9 +86,10 @@
 </template>
 
 <script setup lang="ts">
-import { useForm } from 'vee-validate'
+import { useFieldValue, useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import * as z from 'zod'
+import { LpPair, UserAsset } from '~/classes/Asset'
 
 import {
   FormControl,
@@ -77,6 +98,9 @@ import {
   FormLabel,
   FormMessage
 } from '@/components/ui/form'
+import { cn } from '~/lib/utils'
+
+const hasAttemptedSubmit = ref(false)
 
 const formSchema = toTypedSchema(z.object({
   amount: z.preprocess((val) => {
@@ -90,7 +114,7 @@ const formSchema = toTypedSchema(z.object({
       }
       return val;
     }, z.number().gt(0)),
-  token: z.string(),
+  token: z.instanceof(UserAsset),
   interest: z.preprocess((val) => {
     if (typeof val === "string") {
         const trimmed = val.trim();
@@ -102,26 +126,64 @@ const formSchema = toTypedSchema(z.object({
       }
       return val;
     }, z.number().gt(0)),
+    // TODO add validation for collateral
+    collateral: z.instanceof(LpPair)
 }))
 
-const form = useForm({
+const { handleSubmit, isSubmitting, validate, values } = useForm({
   validationSchema: formSchema,
+  // TODO it's possible to specify default value using .default directly on the zod schema
+  //  instead of needing to specify it here in initialValues
   initialValues: {
     amount: '',
-    token: '',
-    interest: undefined
-  }
+    token: undefined,
+    interest: '',
+    collateral: new LpPair(
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined
+    )
+  },
 })
 
-const onSubmit = form.handleSubmit((values) => {
-  console.log('Form submitted!', values)
-})
+const onSubmit = async () => {
+    hasAttemptedSubmit.value = true
+
+    const { valid } = await validate()
+
+    if (!valid) {
+        // TODO display error messages
+        return
+    }
+
+    handleSubmit((values) => {
+        console.log('Form submitted!', values)
+    })
+}
 
 const submitButtonText = computed(() => {
-  return form.isSubmitting ? 'Submitting...' : 'Submit'
+  return isSubmitting.value ? 'Submitting...' : 'Submit'
 })
 
-const handleTokenSelect = (token: string) => {
-    form.setFieldValue('token', token)
-}
+const creditAmountValue = useFieldValue<number>('amount')
+const creditTokenValue = useFieldValue<UserAsset>('token')
+
+const creditTokenPrice = computed(() => {
+    // TODO fetch dynamically price
+    return 1.23
+})
+
+const creditPrice = computed(() => {
+    if (!creditAmountValue.value || !creditTokenValue.value?.address) {
+        return '$0'
+    }
+
+    return creditTokenPrice.value * creditAmountValue.value
+})
+
+const inputsCssClasses = cn('p-0 text-neutral-400 border-none focus-visible:border-none focus-visible:ring-0 aria-invalid:border-none aria-invalid:border-transparent')
 </script>

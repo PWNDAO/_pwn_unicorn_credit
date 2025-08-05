@@ -7,7 +7,7 @@ export const useUserTokens = () => {
         queryKey: ['user-tokens'],
         queryFn: () => {
             // TODO fetch tokens from backend
-            return USER_TOKENS
+            return USER_TOKENS ?? []
         }
     })
 

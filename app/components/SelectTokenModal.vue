@@ -1,8 +1,13 @@
 <template>
-    <Dialog>
+    <Dialog v-model:open="isOpen">
         <DialogTrigger>
             <!-- TODO show currently selected token + arrow down-->
-            Select Token
+             <Button v-if="!value?.address" type="button">
+                Select Token
+             </Button>
+             <Button v-else variant="outline" type="button">
+                {{ value?.name }}
+             </Button>
         </DialogTrigger>
         <DialogContent>
             <DialogHeader>
@@ -16,8 +21,8 @@
                     Show available
                 </div>
 
-                <div>
-                    <div v-for="token in userTokens.tokens" :key="token.address" @select="handleSelect(token)">
+                <div v-if="userTokens?.length">
+                    <div v-for="token in userTokens" :key="token.address" @click="handleSelect(token)">
                         <div>
                             {{ token.name }}
                         </div>
@@ -30,15 +35,29 @@
 </template>
 
 <script setup lang="ts">
+import type { UserAsset } from '~/classes/Asset';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog'
+import { useField } from 'vee-validate';
 
-const emit = defineEmits<{
-    (e: 'select', token: string): void
-}>()
+interface Props {
+    fieldName: string
+}
+const props = defineProps<Props>()
 
-const handleSelect = (token: string) => {
-    emit('select', token)
+const isOpen = ref(false)
+
+const { setValue, value } = useField<UserAsset>(props.fieldName)
+
+setInterval(() => {
+    console.log('value', value.value)
+}, 1000)
+
+const handleSelect = (token: UserAsset) => {
+    console.log('handleSelect', token)
+    setValue(token)
+    isOpen.value = false
 }
 
-const userTokens = useUserTokens()
+const userTokensQuery = useUserTokens()
+const userTokens = computed(() => userTokensQuery.tokens.value ?? [])
 </script>
