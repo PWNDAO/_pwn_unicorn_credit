@@ -22,11 +22,7 @@
                 </div>
 
                 <div v-if="userTokens?.length">
-                    <div v-for="token in userTokens" :key="token.address" @click="handleSelect(token)">
-                        <div>
-                            {{ token.name }}
-                        </div>
-                    </div>
+                    <AssetRow v-for="token in userTokens" :key="token.address" :asset="token" @click="handleSelect(token)" />
                 </div>
 
             </DialogHeader>

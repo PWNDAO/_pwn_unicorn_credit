@@ -4,9 +4,9 @@
 
             <div class="border-2 p-3 rounded-lg border-neutral-700">
                 <label class="text-neutral-400">I want to lend</label>
-                <div class="flex justify-between">
+                <div class="flex justify-between gap-2">
                     <FormField v-slot="{ componentField }" name="amount">
-                        <FormItem>
+                        <FormItem class="w-full">
                             <FormControl>
                                 <Input :class="inputsCssClasses" placeholder="0" v-bind="componentField" />
                             </FormControl>
@@ -185,5 +185,8 @@ const creditPrice = computed(() => {
     return creditTokenPrice.value * creditAmountValue.value
 })
 
-const inputsCssClasses = cn('p-0 text-neutral-400 border-none focus-visible:border-none focus-visible:ring-0 aria-invalid:border-none aria-invalid:border-transparent')
+const inputsCssClasses = cn(
+    'p-0 border-none focus-visible:border-none focus-visible:ring-0 aria-invalid:border-none aria-invalid:border-transparent',
+    'text-foreground h-[3rem] !text-3xl'
+)
 </script>

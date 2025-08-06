@@ -16,7 +16,7 @@
       </ul>
     </div>
     <div>
-      <ConnectWalletBtn />
+      <TheWallet />
     </div>
   </nav>
 </template>
